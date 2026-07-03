@@ -383,12 +383,13 @@
   </div>
 </div>
 
-<script type="module">
-import { HfInference } from 'https://cdn.jsdelivr.net/npm/@huggingface/inference@2.8.1/+esm';
-
-// İstediğin modeli Groq altyapısını tetikleyecek şekilde buraya tanımladık
+<script>
+// Deploy dostu standart fetch mimarisi
 const MODEL = "Qwen/Qwen3-32B:groq";
 document.getElementById("model").textContent = MODEL;
+
+// Router API URL
+const API_URL = "https://api-inference.huggingface.co/v1/chat/completions";
 
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
@@ -484,23 +485,36 @@ async function sendMessage(){
   showTyping();
 
   try{
-    const client = new HfInference(apiKey);
-
-    const chatCompletion = await client.chatCompletion({
-      model: MODEL,
-      messages: history.map(m => ({role: m.role, content: m.content})),
-      max_tokens: 2048
+    // Doğrudan fetch kullanarak harici kütüphane bağımlılığını (ve deploy hatalarını) sıfırlıyoruz
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: history.map(m => ({role: m.role, content: m.content})),
+        max_tokens: 2048
+      })
     });
 
     removeTyping();
 
-    const reply = chatCompletion.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
+    if(!res.ok){
+      const errData = await res.text();
+      appendBubble('bot', 'Hata oluştu: ' + res.status + '\n' + errData.slice(0, 200));
+      return;
+    }
+
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
     appendBubble('bot', reply);
     history.push({role:'assistant', content:reply});
     saveHistory();
   }catch(err){
     removeTyping();
-    appendBubble('bot', 'Bağlantı veya Yetki Hatası: ' + err.message);
+    appendBubble('bot', 'Bağlantı Hatası: ' + err.message);
   }finally{
     sendBtn.disabled = false;
     inputEl.focus();
