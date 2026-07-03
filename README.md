@@ -1,1 +1,0 @@
-Replace API key in config.js then upload to GitHub Pages.
