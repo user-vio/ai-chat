@@ -383,13 +383,13 @@
   </div>
 </div>
 
-<script type="module">
-import { HfInference } from 'https://cdn.jsdelivr.net/npm/@huggingface/inference@2.8.1/+esm';
-
-// Chat istekleri için optimize edilmiş distilled model yolu
-//const MODEL = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B";
+<script>
+// Kararlı test modeli
 const MODEL = "meta-llama/Llama-3.1-8B-Instruct";
 document.getElementById("model").textContent = MODEL;
+
+// DOĞRU VE RESMİ API URL'Sİ (Model adı URL'de OLMAZ!)
+const API_URL = "https://api-inference.huggingface.co/v1/chat/completions";
 
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
@@ -398,7 +398,6 @@ const emptyState = document.getElementById('emptyState');
 const overlay = document.getElementById('overlay');
 const apiKeyInput = document.getElementById('apiKeyInput');
 
-// Değişken isimleri HF uyumlu olacak şekilde hf_token olarak güncellendi
 let history = JSON.parse(localStorage.getItem('chat_history') || '[]');
 let apiKey = localStorage.getItem('hf_token') || ''; 
 
@@ -486,25 +485,37 @@ async function sendMessage(){
   showTyping();
 
   try{
-    // SDK başlatılıyor
-    const hf = new HfInference(apiKey);
-
-    // CORS engeli olmadan doğrudan API üzerinden sohbet isteği yapılıyor
-    const response = await hf.chatCompletion({
-      model: MODEL,
-      messages: history.map(m => ({role: m.role, content: m.content})),
-      max_tokens: 2048
+    // Doğru adrese standart tarayıcı fetch isteği atılıyor
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: MODEL, // Model adı sunucuya burada bildirilir
+        messages: history.map(m => ({role: m.role, content: m.content})),
+        max_tokens: 1024
+      })
     });
 
     removeTyping();
 
-    const reply = response.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
+    if(!res.ok){
+      const errText = await res.text();
+      appendBubble('bot', 'Bir hata oluştu: ' + res.status + '\n' + errText.slice(0, 300));
+      sendBtn.disabled = false;
+      return;
+    }
+
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
     appendBubble('bot', reply);
     history.push({role:'assistant', content:reply});
     saveHistory();
   }catch(err){
     removeTyping();
-    appendBubble('bot', 'Bağlantı veya Yetki Hatası: ' + err.message);
+    appendBubble('bot', 'Bağlantı hatası: ' + err.message);
   }finally{
     sendBtn.disabled = false;
     inputEl.focus();
