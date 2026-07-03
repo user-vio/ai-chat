@@ -483,19 +483,20 @@ async function sendMessage(){
   showTyping();
 
   try{
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.href,
-        'X-Title': 'AI Sohbet'
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: history.map(m => ({role: m.role, content: m.content}))
-      })
-    });
+const res = await fetch(API_URL, {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + apiKey,
+    'Content-Type': 'application/json',
+    // GitHub Pages URL'sini gizlemek için referer'ı boş bırakıyoruz veya kaldırıyoruz
+    'HTTP-Referer': 'https://localhost', 
+    'X-Title': 'AI Sohbet'
+  },
+  body: JSON.stringify({
+    model: MODEL,
+    messages: history.map(m => ({role: m.role, content: m.content}))
+  })
+});
 
     removeTyping();
 
