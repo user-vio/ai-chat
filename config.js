@@ -1,0 +1,1 @@
+const API_KEY="YOUR_OPENAI_API_KEY";const MODEL="gpt-4.1-mini";
