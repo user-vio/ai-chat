@@ -3,7 +3,13 @@ const input = document.getElementById('msg');
 const btn = document.getElementById('send');
 const modelLabel = document.getElementById('model-label');
 
-if (typeof MODEL !== 'undefined') modelLabel.textContent = MODEL;
+// Eğer config.js'den gelmiyorsa hata vermemesi için varsayılan değerler atayalım
+const CURRENT_MODEL = typeof MODEL !== 'undefined' ? MODEL : 'gpt-4o-mini';
+const CURRENT_ENDPOINT = typeof ENDPOINT !== 'undefined' ? ENDPOINT : 'https://api.openai.com/v1/chat/completions';
+const CURRENT_KEY = typeof API_KEY !== 'undefined' ? API_KEY : 'BURAYA_API_KEYINIZI_YAZIN';
+
+// Üst barda model adını göster
+if (modelLabel) modelLabel.textContent = CURRENT_MODEL;
 
 function add(cls, text) {
   const d = document.createElement('div');
@@ -38,14 +44,14 @@ async function send() {
   showTyping();
 
   try {
-    const r = await fetch(typeof ENDPOINT !== 'undefined' ? ENDPOINT : 'https://api.openai.com/v1/chat/completions', {
+    const r = await fetch(CURRENT_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + API_KEY
+        'Authorization': 'Bearer ' + CURRENT_KEY
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: CURRENT_MODEL,
         messages: [{ role: 'user', content: text }]
       })
     });
@@ -68,6 +74,12 @@ async function send() {
   }
 }
 
+// --- EKSİK OLAN BAĞLANTILAR ---
+
+// 1. Butona tıklanınca gönderme fonksiyonunu tetikle
+btn.addEventListener('click', send);
+
+// 2. Enter tuşuna basınca gönderme tetikle
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') send();
 });
