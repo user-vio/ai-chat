@@ -1,1 +1,1 @@
-const API_KEY="YOUR_OPENAI_API_KEY";const MODEL="gpt-4.1-mini";
+const API_KEY="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";const MODEL="DeepSeek-v4-flash-free";
