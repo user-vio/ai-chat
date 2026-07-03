@@ -336,7 +336,7 @@
     <div class="dot"></div>
     <div>
       <h1>AI Sohbet</h1>
-      <span id="model"> · OpenRouter</span>
+      <span id="model"> · Hugging Face</span>
     </div>
   </div>
   <div class="header-actions">
@@ -353,7 +353,7 @@
   <div class="empty-state" id="emptyState">
     <div class="dot">✨</div>
     <h2>Nasıl yardımcı olabilirim?</h2>
-    <p>Aşağıya bir mesaj yazarak sohbete başla. API anahtarını ayarlar menüsünden ekleyebilirsin.</p>
+    <p>Aşağıya bir mesaj yazarak sohbete başla. HF_TOKEN (Hugging Face Access Token) değerini ayarlardan ekleyebilirsin.</p>
   </div>
 </div>
 
@@ -367,16 +367,15 @@
   <div class="hint">Cevaplar yapay zeka tarafından üretilir, kontrol etmeyi unutma.</div>
 </footer>
 
-<!-- Settings Modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <h3>Ayarlar</h3>
-    <p class="desc">OpenRouter API anahtarınızı girin. Anahtar yalnızca tarayıcınızda (localStorage) saklanır.</p>
+    <p class="desc">Hugging Face Access Token (HF_TOKEN) değerinizi girin. Yalnızca tarayıcınızda (localStorage) saklanır.</p>
     <div class="field">
-      <label>OpenRouter API Anahtarı</label>
-      <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." autocomplete="off">
+      <label>Hugging Face Token</label>
+      <input type="password" id="apiKeyInput" placeholder="hf_..." autocomplete="off">
     </div>
-    <a class="key-link" href="https://openrouter.ai/api/v1/chat/completions" target="_blank" rel="noopener">→ openrouter.ai/keys adresinden anahtar al</a>
+    <a class="key-link" href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">→ huggingface.co/settings/tokens adresinden anahtar al</a>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="cancelSettings">İptal</button>
       <button class="btn btn-primary" id="saveSettings">Kaydet</button>
@@ -385,9 +384,12 @@
 </div>
 
 <script>
-const MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"; // gerekirse OpenRouter model id'sini güncelleyin
-  document.getElementById("model").textContent = MODEL;
-const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+// İstediğin DeepSeek-R1 model yolunu tanımladık
+const MODEL = "deepseek-ai/DeepSeek-R1"; 
+document.getElementById("model").textContent = MODEL;
+
+// Hugging Face standart OpenAI uyumlu Chat Completion Endpoint'i
+const API_URL = "https://api-inference.huggingface.co/v1/chat/completions";
 
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
@@ -397,7 +399,7 @@ const overlay = document.getElementById('overlay');
 const apiKeyInput = document.getElementById('apiKeyInput');
 
 let history = JSON.parse(localStorage.getItem('chat_history') || '[]');
-let apiKey = localStorage.getItem('openrouter_key') || '';
+let apiKey = localStorage.getItem('openrouter_key') || ''; // Mevcut saklanan anahtar
 
 function renderHistory(){
   chatEl.innerHTML = '';
@@ -483,20 +485,19 @@ async function sendMessage(){
   showTyping();
 
   try{
-const res = await fetch(API_URL, {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ' + apiKey,
-    'Content-Type': 'application/json',
-    // GitHub Pages URL'sini gizlemek için referer'ı boş bırakıyoruz veya kaldırıyoruz
-    'HTTP-Referer': 'https://localhost', 
-    'X-Title': 'AI Sohbet'
-  },
-  body: JSON.stringify({
-    model: MODEL,
-    messages: history.map(m => ({role: m.role, content: m.content}))
-  })
-});
+    // Node.js kütüphanesi yerine doğrudan Hugging Face API'sine tarayıcı uyumlu fetch atıyoruz
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: history.map(m => ({role: m.role, content: m.content})),
+        max_tokens: 2048
+      })
+    });
 
     removeTyping();
 
@@ -508,6 +509,7 @@ const res = await fetch(API_URL, {
     }
 
     const data = await res.json();
+    // Tıpkı kodundaki console.log(chatCompletion.choices[0].message) mantığıyla cevabı yakalıyoruz
     const reply = data.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
     appendBubble('bot', reply);
     history.push({role:'assistant', content:reply});
