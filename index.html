@@ -383,13 +383,12 @@
   </div>
 </div>
 
-<script>
-// Kararlı test modeli
-const MODEL = "meta-llama/Llama-3.1-8B-Instruct";
-document.getElementById("model").textContent = MODEL;
+<script type="module">
+import { HfInference } from 'https://cdn.jsdelivr.net/npm/@huggingface/inference@2.8.1/+esm';
 
-// DOĞRU VE RESMİ API URL'Sİ (Model adı URL'de OLMAZ!)
-const API_URL = "https://api-inference.huggingface.co/v1/chat/completions";
+// Verdiğin koddaki DeepSeek-V4-Flash model yolunu entegre ettik
+const MODEL = "deepseek-ai/DeepSeek-V4-Flash:novita";
+document.getElementById("model").textContent = MODEL;
 
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('userInput');
@@ -485,37 +484,26 @@ async function sendMessage(){
   showTyping();
 
   try{
-    // Doğru adrese standart tarayıcı fetch isteği atılıyor
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: MODEL, // Model adı sunucuya burada bildirilir
-        messages: history.map(m => ({role: m.role, content: m.content})),
-        max_tokens: 1024
-      })
+    // Gönderdiğin kod mimarisindeki HfInference (InferenceClient) nesnesini başlatıyoruz
+    const client = new HfInference(apiKey);
+
+    // Koddaki chatCompletion metodunu geçmişi besleyecek şekilde tetikliyoruz
+    const chatCompletion = await client.chatCompletion({
+      model: MODEL,
+      messages: history.map(m => ({role: m.role, content: m.content})),
+      max_tokens: 2048
     });
 
     removeTyping();
 
-    if(!res.ok){
-      const errText = await res.text();
-      appendBubble('bot', 'Bir hata oluştu: ' + res.status + '\n' + errText.slice(0, 300));
-      sendBtn.disabled = false;
-      return;
-    }
-
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
+    // console.log(chatCompletion.choices[0].message) mantığıyla cevabı arayüze basıyoruz
+    const reply = chatCompletion.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
     appendBubble('bot', reply);
     history.push({role:'assistant', content:reply});
     saveHistory();
   }catch(err){
     removeTyping();
-    appendBubble('bot', 'Bağlantı hatası: ' + err.message);
+    appendBubble('bot', 'Bağlantı veya Yetki Hatası: ' + err.message);
   }finally{
     sendBtn.disabled = false;
     inputEl.focus();
