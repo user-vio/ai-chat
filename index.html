@@ -386,8 +386,8 @@
 <script type="module">
 import { HfInference } from 'https://cdn.jsdelivr.net/npm/@huggingface/inference@2.8.1/+esm';
 
-// Verdiğin koddaki DeepSeek-V4-Flash model yolunu entegre ettik
-const MODEL = "deepseek-ai/DeepSeek-V4-Flash:novita";
+// İstediğin modeli Groq altyapısını tetikleyecek şekilde buraya tanımladık
+const MODEL = "Qwen/Qwen3-32B:groq";
 document.getElementById("model").textContent = MODEL;
 
 const chatEl = document.getElementById('chat');
@@ -484,10 +484,8 @@ async function sendMessage(){
   showTyping();
 
   try{
-    // Gönderdiğin kod mimarisindeki HfInference (InferenceClient) nesnesini başlatıyoruz
     const client = new HfInference(apiKey);
 
-    // Koddaki chatCompletion metodunu geçmişi besleyecek şekilde tetikliyoruz
     const chatCompletion = await client.chatCompletion({
       model: MODEL,
       messages: history.map(m => ({role: m.role, content: m.content})),
@@ -496,7 +494,6 @@ async function sendMessage(){
 
     removeTyping();
 
-    // console.log(chatCompletion.choices[0].message) mantığıyla cevabı arayüze basıyoruz
     const reply = chatCompletion.choices?.[0]?.message?.content || 'Boş yanıt alındı.';
     appendBubble('bot', reply);
     history.push({role:'assistant', content:reply});
