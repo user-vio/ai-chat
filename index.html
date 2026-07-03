@@ -336,7 +336,7 @@
     <div class="dot"></div>
     <div>
       <h1>AI Sohbet</h1>
-      <span>DeepSeek V4 · OpenRouter</span>
+      <span id="model"> · OpenRouter</span>
     </div>
   </div>
   <div class="header-actions">
@@ -386,6 +386,7 @@
 
 <script>
 const MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"; // gerekirse OpenRouter model id'sini güncelleyin
+  document.getElementById("model").textContent = MODEL;
 const API_URL = "https://openrouter.ai/";
 
 const chatEl = document.getElementById('chat');
