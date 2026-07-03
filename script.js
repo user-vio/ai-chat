@@ -4,9 +4,9 @@ const btn = document.getElementById('send');
 const modelLabel = document.getElementById('model-label');
 
 // Eğer config.js'den gelmiyorsa hata vermemesi için varsayılan değerler atayalım
-const CURRENT_MODEL = typeof MODEL !== 'undefined' ? MODEL : 'gpt-4o-mini';
-const CURRENT_ENDPOINT = typeof ENDPOINT !== 'undefined' ? ENDPOINT : 'https://api.openai.com/v1/chat/completions';
-const CURRENT_KEY = typeof API_KEY !== 'undefined' ? API_KEY : 'BURAYA_API_KEYINIZI_YAZIN';
+const CURRENT_MODEL = typeof MODEL !== 'undefined' ? MODEL : 'deepseek-v4-flash-free';
+const CURRENT_ENDPOINT = typeof ENDPOINT !== 'undefined' ? ENDPOINT : 'https://openrouter.ai/api/v1/chat/completions';
+const CURRENT_KEY = typeof API_KEY !== 'undefined' ? API_KEY : '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';
 
 // Üst barda model adını göster
 if (modelLabel) modelLabel.textContent = CURRENT_MODEL;
