@@ -1,3 +1,3 @@
-const API_KEY = "sk-rFwQ53jKKjQkvS7nazI2oeX2hF0oI1l62WXuT1DUlyY2L396dKonuOC5tuRhGkbo";
+const API_KEY = "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";
 const MODEL = "deepseek-v4-flash-free";
-
+const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
